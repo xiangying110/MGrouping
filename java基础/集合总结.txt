@@ -1,0 +1,185 @@
+1：集合体系(掌握)
+	集合
+		|--Collection(单列)
+			|--List(有序,可重复)
+				|--ArrayList
+					底层数据结构是数组，查询快，增删慢。
+					线程不安全，效率高。
+				|--Vector
+					底层数据结构是数组，查询快，增删慢。
+					线程安全，效率低。
+				|--LinkedList	
+					底层数据结构是链表，查询慢，增删快。
+					线程不安全，效率高。
+			|--Set(无序,唯一)
+				|--HashSet
+					底层数据结构是哈希表。
+					线程不安全，效率高。
+
+					怎么保证唯一性的呢?
+					它依赖两个方法：hashCode()和equals()
+					顺序：
+						首先判断hashCode()值是否相同。
+						同：继续走equals()，看返回值
+							如果true：就不添加到集合。
+							如果false：就添加到集合。
+						不同：就添加到集合。
+				|--TreeSet
+					底层数据结构是二叉树。
+					线程不安全，效率高。
+
+					怎么保证唯一性的呢?是根据返回是否是0。
+					怎么保证排序的呢?两种方式
+						自然排序(元素具备比较性)
+							实现Comparable接口
+						比较器排序(集合具备比较性)
+							实现Comparator接口
+		|--Map(双列 底层结构是针对键有效，跟值无关)
+			|--HashMap
+				底层数据结构是哈希表。
+				线程不安全，效率高。
+
+				怎么保证唯一性的呢?
+				它依赖两个方法：hashCode()和equals()
+				顺序：
+					首先判断hashCode()值是否相同。
+					同：继续走equals()，看返回值
+						如果true：就不添加到集合。
+						如果false：就添加到集合。
+					不同：就添加到集合。
+			|--Hashtable
+				底层数据结构是哈希表。
+				线程安全，效率低。
+
+				怎么保证唯一性的呢?
+				它依赖两个方法：hashCode()和equals()
+				顺序：
+					首先判断hashCode()值是否相同。
+					同：继续走equals()，看返回值
+						如果true：就不添加到集合。
+						如果false：就添加到集合。
+					不同：就添加到集合。
+			|--TreeMap
+				底层数据结构是二叉树。
+				线程不安全，效率高。
+
+				怎么保证唯一性的呢?是根据返回是否是0。
+				怎么保证排序的呢?两种方式
+					自然排序(元素具备比较性)
+						实现Comparable接口
+					比较器排序(集合具备比较性)
+						实现Comparator接口
+
+2：应用。(添加功能，判断功能，删除功能，获取功能，长度功能)
+	Collection 
+		add(Object obj)
+		remove(Object obj)
+		contains(Object obj)
+		iterator()
+		size()
+		
+		|--List
+			get(int index)
+			add(int index,Object obj)
+			remove(int index)
+			set(int index,Object obj)
+		|--Set
+
+	Map
+		put(Object key,Object value)
+		remove(Object key)
+		containsKey(Object key)
+		containsValue(Object value)
+		size()
+		get(Object key)
+		keySet()
+		values()
+
+3：遍历方式
+	List:
+		迭代器(在源码中可以看到的，开发中也经常看到)
+		增强for(开发中看到,JDK5以后用)
+		普通for
+
+		如果仅仅为了遍历，用任意一种即可。一般选择前两种的任意一种。
+		如果要做修改，或者删除指定位置的元素，或者在指定位置添加元素。用普通for。
+	Set:
+		迭代器
+		增强for
+
+		任选一种。
+	Map:
+		键找值。
+
+4：代码补齐：请对array,hs,hm进行遍历。
+	A:
+		ArrayList<String> array = new ArrayList<String>();
+
+		方式1：
+		Iterator<String> it = array.iterator();
+		while(it.hasNext()){
+			String s = it.next();
+			System.out.println(s);
+		}
+
+		方式2：
+		for(String s : array){
+			System.out.println(s);
+		}
+
+		方式3：
+		for(int x=0; x<array.size(); x++){
+			String s = array.get(x);
+			System.out.println(s);
+		}
+
+	B:
+		HashSet<String> hs = new HashSet<String>();
+	
+		方式1：
+		Iterator<String> it = hs.iterator();
+		while(it.hasNext()){
+			String s = it.next();
+			System.out.println(s);
+		}
+
+		方式2：
+		for(String s : hs)
+		{
+			System.out.println(s);
+		}
+
+	C:
+		HashMap<String,Strting> hm = new HashMap<String,String>();	
+
+		Set<String> set = hm.keySet();
+		for(String key : set)
+		{
+			String value = hm.get(key);
+			System.out.println(key+"***"+value);
+		}
+
+5：什么时候用谁?
+	是否键值对?
+		是：Map
+			是否对键排序?
+				是：TreeMap
+				否：HashMap
+			不懂的情况下，使用HashMap。
+
+		否：Collection
+			是否唯一
+				是：Set
+					是否对元素进行排序?
+						是：TreeSet
+						否：HashSet
+					不懂的情况下，使用HashSet
+				否：List
+					是否要安全：
+						是：Vector(真正开发中也不用)
+							List list = Collections.synchronizedList(new ArrayList());
+
+						否：ArrayList，LinkedList
+							查询多：ArrayList
+							增删多：LinkedList
+					不懂的情况下，使用ArrayList

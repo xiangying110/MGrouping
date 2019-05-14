@@ -1,0 +1,103 @@
+1：封装(理解)
+	(1)隐藏实现的细节，提供公共的访问方式。
+		类，方法等其实都是封装的具体体现。
+	(2)private关键字
+		A:用于修饰成员变量和成员方法。
+		B:被修饰的内容在其他类中是不可以被访问的。
+	(3)常见的应用：(掌握)
+		类中的所有成员变量私有，给出对应的get/set方法。
+		
+		代码体现：
+		
+		class Student
+		{
+			private String name;
+			private int age;
+
+			public Student(){}
+
+			public Student(String name,int age)
+			{
+				this.name = name;
+				this.age = age;
+			}
+
+			public void setName(String name)
+			{
+				this.name = name;
+			}
+
+			public String getName()
+			{
+				return name;
+			}
+
+			public void setAge(int age)
+			{
+				this.age = age;
+			}
+
+			public int getAge()
+			{
+				return age;
+			}
+		}
+
+2：构造方法(掌握)
+	(1)格式及特点
+		格式：
+			访问权限修饰符	类名(参数...){}
+
+			访问权限修饰符:
+				public,private
+		特点：
+			A:方法名和类名相同
+			B:没有返回值类型
+			C:没有具体的返回值
+	(2)注意事项：
+		A:如果你不给构造方法，jvm会自动给你一个无参构造方法。
+		B:如果你给出了构造方法，那么，jvm将不再提供无参构造方法。
+		  这个时候，你如果要使用无参构造方法：只能自己提供
+
+		  推荐：永远手动给出无参构造方法。
+
+3：this关键字(掌握)
+	(1)是一个关键字。代表当前类对象的引用。
+		简单记：在方法中，哪个对象调用方法，this就代表谁。
+		除了静态方法外，所有的方法中有隐含的有一个this引用
+	(2)应用场景：
+		解决局部变量隐藏成员变量问题。
+
+4：static关键字(理解)
+	(1)是一个关键字。可以修饰成员变量和成员方法。
+	(2)静态的特点：
+		A:随着类的加载而加载
+		B:优先于对象存在
+		C:被类的所有对象共享
+		D:可以通过类名调用
+	(3)静态的注意事项：
+		A:在静态方法中是没有this关键字的。
+		B:静态方法只能访问静态成员。
+	(4)静态内容的调用：
+		A:被对象调用
+		B:被类名调用
+
+		推荐被类名调用。
+	(5)什么时候该用static呢?
+		如果某个内容是所有对象共享的，就用静态修饰。
+		举例：
+			水杯和饮水机。
+			厕所和人。
+			老师和学生。
+
+5：Math类的随机数(掌握)
+	类名调用静态方法。
+	
+	包：java.lang
+	类：Math
+	方法：public static double random():
+	
+	java.lang包下的类是不用导包就可以直接使用的。
+
+	产生1-100之间的随机数：
+	int number = (int)(Math.random()*100)+1;
