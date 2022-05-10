@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="dog" class="com.chenll.springbean.Dog"/>
+    <bean id="cat" class="com.chenll.springbean.Cat"/>
+    <bean id="user" class="com.chenll.springbean.User">
+        <property name="cat" ref="cat"/>
+        <property name="dog" ref="dog" />
+        <property name="str"
+                  value="chenll"/>
+
+    </bean>
+    <!--byName会自动在容器上下文中查找，和自己对象set方法后面对应的bean 的id -->
+    <bean id="people" class="com.chenll.springbean.User" autowire="byName">
+        <property name="str" value="1111" />
+    </bean>
+</beans>
