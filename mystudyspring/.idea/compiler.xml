@@ -9,6 +9,8 @@
         <module name="spring01" />
         <module name="spring02" />
         <module name="spring03" />
+        <module name="spring04" />
+        <module name="spring05" />
       </profile>
     </annotationProcessing>
   </component>
