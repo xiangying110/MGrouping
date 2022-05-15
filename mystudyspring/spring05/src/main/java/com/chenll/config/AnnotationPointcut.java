@@ -5,7 +5,7 @@ import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-@Aspect
+@Aspect//标注这个类是个切面
 public class AnnotationPointcut {
     @Before("execution(* com.chenll.aop.UserServiceImpl.*(..))")
     public void before(){
@@ -18,7 +18,7 @@ public class AnnotationPointcut {
     @Around("execution(* com.chenll.aop.UserServiceImpl.*(..))")
     public void around(ProceedingJoinPoint jp) throws Throwable {
         System.out.println("环绕前");
-        System.out.println("签名:"+jp.getSignature());
+        System.out.println("签名:"+jp.getSignature());  //接入点
 //执行目标方法proceed
         Object proceed = jp.proceed();
         System.out.println("环绕后");
