@@ -227,8 +227,8 @@ Docker 利用容器（Container）独立运行的一个或一组应用。容器�
 ```shell
 uname -r 命令用于打印当前系统相关信息（内核版本号、硬件架构、主机名称和操作系统类型等）。
 #系统内核版本为       3.10 以上。
-[root@kuangshen ~]# uname -r
-3.10.0-1062.12.1.el7.x86_64
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# uname -r
+3.10.0-1160.53.1.el7.x86_64
 ```
 
 **查看版本信息：**
@@ -301,6 +301,63 @@ yum-config-manager --add-repo http://mirrors.aliyun.com/docker-
 ce/linux/centos/docker-ce.repo
 ```
 
+7、更新yum软件包索引
+
+```shell
+yum makecache fast
+```
+
+8、安装 Docker CE
+
+```shell
+#docker-ce社区办，ee企业版
+yum install docker-ce docker-ce-cli containerd.io
+```
+
+9、启动 Docker
+
+```shell
+systemctl start docker
+```
+
+10、测试命令
+
+```shell
+docker version
+
+docker run hello-world
+
+docker images
+```
+
+```shell
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker images
+REPOSITORY      TAG          IMAGE ID       CREATED        SIZE
+<none>          <none>       e619f88231ff   3 months ago   41.8MB
+wordpress       latest       c3c92cc3dcb1   6 months ago   616MB
+mysql           5.7          c20987f18b13   6 months ago   448MB
+elasticsearch   7.16.1       405db9d10ee0   7 months ago   642MB
+logstash        7.16.1       eeed133b351f   7 months ago   999MB
+kibana          7.16.1       02f1088fcc07   7 months ago   1.3GB
+redis           alpine       3900abf41552   7 months ago   32.4MB
+python          3.6-alpine   3a9e80fa4606   7 months ago   40.7MB
+python          3.7-alpine   a1034fd13493   7 months ago   41.8MB
+centos          latest       5d0da3dc9764   9 months ago   231MB
+```
+
+
+
+11、卸载
+
+```shell
+systemctl stop docker
+
+yum -y remove docker-ce docker-ce-cli containerd.io
+
+#这是docker默认的工作路径/var/lib/docker
+rm -rf /var/lib/docker
+```
+
 
 
 
@@ -309,9 +366,511 @@ ce/linux/centos/docker-ce.repo
 
 ## 阿里云镜像加速
 
+1、介绍：https://www.aliyun.com/product/acr
+2、注册一个属于自己的阿里云账户(可复用淘宝账号)
+3、进入管理控制台设置密码，开通
+4、查看镜像加速器自己的
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220712202657386.png" alt="image-20220712202657386" style="zoom:60%;" />
+
+
+
+5、配置镜像加速
+
+```shell
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": ["https://n4vku47u.mirror.aliyuncs.com"]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+> 测试 HelloWorld
+
+1、启动hello-world
+
+```shell
+docker run hello-world
+```
+
+2 run干了什么？
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220712203044676.png" alt="image-20220712203044676" style="zoom:67%;" />
+
+
+
+
+
 ## 底层原理
 
+**Docker是怎么工作的**
+
+Docker是一个Client-Server结构的系统，Docker守护进程运行在主机上， 然后通过Socket连接从客户
+端访问，守护进程从客户端接受命令并管理运行在主机上的容器。 容器，是一个运行时环境，就是我们
+前面说到的集装箱。
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220712203302610.png" alt="image-20220712203302610" style="zoom:50%;" />
+
+**为什么Docker比较 VM 快**
+
+1、docker有着比虚拟机更少的抽象层。由亍docker不需要Hypervisor实现硬件资源虚拟化,运行在
+docker容器上的程序直接使用的都是实际物理机的硬件资源。因此在CPU、内存利用率上docker将会在
+效率上有明显优势。
+2、docker利用的是宿主机的内核,而不需要Guest OS。因此,当新建一个容器时,docker不需要和虚拟机
+一样重新加载一个操作系统内核。仍而避免引寻、加载操作系统内核返个比较费时费资源的过程,当新建
+一个虚拟机时,虚拟机软件需要加载Guest OS,返个新建过程是分钟级别的。而docker由于直接利用宿主
+机的操作系统,则省略了返个过程,因此新建一个docker容器只需要几秒钟。
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220712203549958.png" alt="image-20220712203549958" style="zoom: 67%;" />
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220712203655545.png" alt="image-20220712203655545" style="zoom:50%;" />
+
+所以说新建一个容器的时候，docker不需要加载一个操作系统内核，避免引导，虚拟机是加载centos，分钟级别，而docker是使用宿主机的操作系统，省略了一些复杂过程，秒级
+
 # Docker常用命令
+
+## 帮助命令
+
+```she
+docker version  # 显示 Docker 版本信息。
+
+docker info   # 显示 Docker 系统信息，包括镜像和容器数。获取详细信息
+
+docker 命令 --help  # 帮助
+```
+
+```shell
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker images --help
+
+Usage:  docker images [OPTIONS] [REPOSITORY[:TAG]]
+
+List images
+
+Options:
+  -a, --all             Show all images (default hides intermediate images)
+      --digests         Show digests
+  -f, --filter filter   Filter output based on conditions provided
+      --format string   Pretty-print images using a Go template
+      --no-trunc        Don't truncate output
+  -q, --quiet           Only show image IDs
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# 
+```
+
+
+
+也可查看官网的帮助文档 ：https://docs.docker.com/reference/
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220712204358419.png" alt="image-20220712204358419" style="zoom:50%;" />
+
+
+
+## 镜像命令
+
+### **docker images**
+
+```shell
+# 列出本地主机上的镜像
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker images 
+REPOSITORY      TAG          IMAGE ID       CREATED        SIZE
+<none>          <none>       e619f88231ff   3 months ago   41.8MB
+wordpress       latest       c3c92cc3dcb1   6 months ago   616MB
+mysql           5.7          c20987f18b13   6 months ago   448MB
+
+# 解释
+REPOSITORY 镜像的仓库源
+TAG 镜像的标签
+IMAGE ID 镜像的ID
+CREATED 镜像创建时间
+SIZE 镜像大小
+
+# 同一个仓库源可以有多个 TAG，代表这个仓库源的不同版本，我们使用REPOSITORY：TAG 定义不同的镜像，如果你不定义镜像的标签版本，docker将默认使用 lastest 镜像！
+
+# 可选项
+-a：列出本地所有镜像
+-q：只显示镜像id
+--digests： 显示镜像的摘要信息
+```
+
+### **docker search**
+
+```shell
+# 搜索镜像
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker search mysql
+NAME                           DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED
+mysql                          MySQL is a widely used, open-source relation…   12858     [OK]       
+mariadb                        MariaDB Server is a high performing open sou…   4928      [OK]
+
+# docker search 某个镜像的名称 对应DockerHub仓库中的镜像
+# 可选项
+--filter=stars=50 ： 列出收藏数不小于指定值的镜像。
+```
+
+也可以在网页上搜索镜像
+
+https://www.docker.com/products/docker-hub/
+
+### **docker pull**
+
+```shell
+# 下载镜像 docker pull 镜像名[:tag]
+[root@kuangshen ~]# docker pull mysql
+Using default tag: latest # 不写tag，默认是latest
+latest: Pulling from library/mysql
+54fec2fa59d0: Already exists # 分层下载 docker images 的核心，联合文件系统
+bcc6c6145912: Already exists
+951c3d959c9d: Already exists
+05de4d0e206e: Already exists
+319f0394ef42: Already exists
+d9185034607b: Already exists
+013a9c64dadc: Already exists
+42f3f7d10903: Pull complete
+c4a3851d9207: Pull complete
+82a1cc65c182: Pull complete
+a0a6b01efa55: Pull complete
+bca5ce71f9ea: Pull complete
+Digest:
+sha256:61a2a33f4b8b4bc93b7b6b9e65e64044aaec594809f818aeffbff69a893d1944 #签名
+Status: Downloaded newer image for mysql:latest
+docker.io/library/mysql:latest # 真实位置
+#等价于
+docker pull mysql
+docker pull docker.io/library/mysql:latest
+
+# 指定版本下载
+[root@kuangshen ~]# docker pull mysql:5.7
+....
+```
+
+
+
+### **docker rmi**
+
+```shell
+# 删除镜像
+docker rmi -f 镜像id # 删除单个
+docker rmi -f 镜像名:tag 镜像名:tag # 删除多个
+docker rmi -f 镜像id 镜像id 镜像id 镜像id # 删除多个
+docker rmi -f $(docker images -qa) # 删除全部
+```
+
+   rm是linux的删除指令，rmi删除镜像，i是images的i    (这样类比，和原有的知识建立连接)
+
+​    $()作为参数传过去
+
+## 容器命令
+
+**说明：**有镜像才能创建容器，我们这里使用 centos 的镜像来测试，就是虚拟一个 centos ！
+
+```shell
+docker pull centos
+```
+
+### **新建容器并启动**
+
+```shell
+# 命令
+docker run 可选参数 IMAGE 
+
+# 常用参数说明
+--name="Name" # 给容器指定一个名字 tomcat01 Tomcat02 用来区分容器
+-d # 后台方式运行容器，并返回容器的id！
+-i # 以交互模式运行容器，通过和 -t 一起使用
+-t # 给容器重新分配一个终端，通常和 -i 一起使用
+-P # 随机端口映射（大写）
+-p # 指定端口映射（小写），一般可以有四种写法
+ip:hostPort:containerPort
+ip::containerPort
+hostPort:containerPort (常用)
+containerPort
+  -p ip:主机端口:容器端口
+  -p 主机端口:容器端口(常用)
+  -p 容器端口
+  容器端口
+  
+# 测试
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker images 
+REPOSITORY      TAG          IMAGE ID       CREATED        SIZE
+<none>          <none>       e619f88231ff   3 months ago   41.8MB
+wordpress       latest       c3c92cc3dcb1   6 months ago   616MB
+mysql           5.7          c20987f18b13   6 months ago   448MB
+elasticsearch   7.16.1       405db9d10ee0   7 months ago   642MB
+
+# 使用centos进行用交互模式启动容器，在容器内执行/bin/bash命令！
+[root@kuangshen ~]# docker run -it centos /bin/bash
+[root@dc8f24dd06d0 /]# ls # 注意地址，已经切换到容器内部了！
+bin etc lib lost+found mnt proc run srv tmp var
+dev home lib64 media
+opt root sbin sys usr
+[root@dc8f24dd06d0 /]# exit # 使用 exit 退出容器
+exit
+[root@kuangshen ~]#
+```
+
+### **列出所有运行的容器**
+
+```shell
+# 命令
+docker ps [OPTIONS]
+# 常用参数说明
+   # 列出当前所有正在运行的容器
+-a # 列出当前所有正在运行的容器 + 历史运行过的容器
+-l # 显示最近创建的容器
+-n=? # 显示最近n个创建的容器
+-q # 静默模式，只显示容器编号。
+
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker ps 
+CONTAINER ID   IMAGE                  COMMAND                  CREATED        STATUS        PORTS                                                                                  NAMES
+35c59d529d7a   kibana:7.16.1          "/bin/tini -- /usr/l…"   3 months ago   Up 2 months   0.0.0.0:5601->5601/tcp, :::5601->5601/tcp                                              kibana73
+7833f8fdb1bb   elasticsearch:7.16.1   "/bin/tini -- /usr/l…"   3 months ago   Up 2 weeks    0.0.0.0:9200->9200/tcp, :::9200->9200/tcp, 0.0.0.0:9300->9300/tcp, :::9300->9300/tcp   es73
+
+
+```
+
+### **退出容器**
+
+```shell
+exit # 容器停止退出
+ctrl+P+Q # 容器不停止退出
+```
+
+### **启动停止容器**
+
+```shell
+docker start (容器id or 容器名) # 启动容器
+docker restart (容器id or 容器名) # 重启容器
+docker stop (容器id or 容器名) # 停止容器
+docker kill (容器id or 容器名) # 强制停止容器
+```
+
+### **删除容器**
+
+```shell
+docker rm 容器id # 删除指定容器  不能删除正在运行的容器，如果删除需要强制删除-f
+docker rm -f $(docker ps -a -q) # 删除所有容器
+docker ps -a -q|xargs docker rm # 删除所有容器
+```
+
+
+
+## 常用其他命令
+
+### **后台启动容器**
+
+```shell
+# 命令
+docker run -d 镜像名
+
+# 例子
+docker run -d centos # 启动centos，使用后台方式启动
+# 问题： 使用docker ps 查看，发现容器已经退出了！
+# 解释：Docker容器后台运行，就必须有一个前台进程，容器运行的命令如果不是那些一直挂起的命令，就会自动退出。
+# 比如，你运行了nginx服务，但是docker前台没有运行应用，这种情况下，容器启动后，会立即自杀，因为他觉得没有程序了，所以最好的情况是，将你的应用使用前台进程的方式运行启动。
+```
+
+
+
+### **查看日志**
+
+```shell
+# 命令
+docker logs -f -t --tail 容器id
+
+# 例子：我们启动 centos，并编写一段脚本来测试玩玩！最后查看日志
+[root@kuangshen ~]# docker run -d centos /bin/sh -c "while true;do echo kuangshen;sleep 1;done"
+[root@kuangshen ~]# docker ps
+CONTAINER ID  IMAGE
+c8530dbbe3b4  centos
+# -t 显示时间戳
+# -f 打印最新的日志
+# --tail 数字 显示多少条！
+
+[root@kuangshen ~]# docker logs -tf --tail 10 c8530dbbe3b4
+2020-05-11T08:46:40.656901941Z kuangshen
+2020-05-11T08:46:41.658765018Z kuangshen
+2020-05-11T08:46:42.661015375Z kuangshen
+2020-05-11T08:46:43.662865628Z kuangshen
+2020-05-11T08:46:44.664571547Z kuangshen
+2020-05-11T08:46:45.666718583Z kuangshen
+2020-05-11T08:46:46.668556725Z kuangshen
+2020-05-11T08:46:47.670424699Z kuangshen
+2020-05-11T08:46:48.672324512Z kuangshen
+2020-05-11T08:46:49.674092766Z kuangshen
+```
+
+
+
+### **查看容器中运行的进程信息，支持 ps 命令参数。**
+
+```shell
+# 命令
+docker top 容器id
+# 测试
+[root@kuangshen ~]# docker top c8530dbbe3b4
+UID PID PPID C STIME TTY TIME CMD
+root 27437 27421 0 16:43 ? 00:00:00 /bin/sh -c ....
+```
+
+
+
+### **查看容器/镜像的元数据**
+
+```shell
+# 命令
+docker inspect 容器id
+# 测试
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker inspect 35c59d529d7a
+[
+    {
+    # 完整的id，有意思啊，这里上面的容器id，就是截取的这个id前几位！
+        "Id": "35c59d529d7a397011f1d0e30c758d223e0a61a44030a51d68da882e514f3e6f",
+        "Created": "2022-03-27T06:30:35.822589527Z",
+        "Path": "/bin/tini",
+        "Args": [
+            "--",
+            "/usr/local/bin/kibana-docker"
+        ],
+        # 状态
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 18849,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2022-04-23T06:46:07.711164445Z",
+            "FinishedAt": "2022-04-23T06:46:06.188657262Z"
+        },
+
+// ...........
+]
+```
+
+
+
+### **进入正在运行的容器**
+
+```shell
+# 命令1
+docker exec -it 容器id bashShell
+# 测试1
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker ps
+CONTAINER ID   IMAGE                  COMMAND                  CREATED        STATUS        PORTS                                                                                  NAMES
+35c59d529d7a   kibana:7.16.1          "/bin/tini -- /usr/l…"   3 months ago   Up 2 months   0.0.0.0:5601->5601/tcp, :::5601->5601/tcp                                              kibana73
+7833f8fdb1bb   elasticsearch:7.16.1   "/bin/tini -- /usr/l…"   3 months ago   Up 2 weeks    0.0.0.0:9200->9200/tcp, :::9200->9200/tcp, 0.0.0.0:9300->9300/tcp, :::9300->9300/tcp   es73
+
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker exec -it 35c59d529d7a /bin/bash
+bash-4.4$  ps -ef
+UID        PID  PPID  C STIME TTY          TIME CMD
+kibana       1     0  0 Apr23 ?        00:02:26 /bin/tini -- /usr/local/bin/kibana-docker
+kibana       7     1  1 Apr23 ?        1-09:30:09 /usr/share/kibana/bin/../node/bin/node /usr/share/kibana/bin/../src/cli/dist --ops.cGroupOverrides.cpuPath=/ --ops.cGroup
+kibana    1241     0  0 13:42 pts/0    00:00:00 /bin/bash
+kibana    1248  1241  0 13:43 pts/0    00:00:00 ps -ef
+bash-4.4$ 
+
+
+# 命令2
+docker attach 容器id
+# 测试2
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker attach 35c59d529d7a
+
+# 区别
+# exec 是在容器中打开新的终端，并且可以启动新的进程
+# attach 直接进入容器启动命令的终端，不会启动新的进程
+```
+
+### **从容器内拷贝文件到主机上**
+
+```shell
+# 命令
+docker cp 容器id:容器内路径 目的主机路径
+# 测试
+# 容器内执行，创建一个文件测试
+[root@c8530dbbe3b4 /]# cd /home
+[root@c8530dbbe3b4 home]# touch f1
+[root@c8530dbbe3b4 home]# ls
+f1
+[root@c8530dbbe3b4 home]# exit
+exit
+# linux复制查看，是否复制成功
+[root@kuangshen ~]# docker cp c8530dbbe3b4:/home/f1 /home
+[root@kuangshen ~]# cd /home
+[root@kuangshen home]# ls
+f1
+```
+
+
+
+## 小结
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220712215054620.png" alt="image-20220712215054620" style="zoom:67%;" />
+
+常用命令
+
+```shell
+attach  Attach to a running container# 当前 shell 下attach 连接指定运行镜像
+build   Build an image from a Dockerfile # 通过 Dockerfile 定制镜像
+commit  Create a new image from a container changes # 提交当前容器为新的镜像
+cp      Copy files/folders from the containers filesystem to the host path#从容器中拷贝指定文件或者目录到宿主机中
+create Create a new container # 创建一个新的容器，同run，但不启动容器
+diff   Inspect changes on a container's filesystem # 查看 docker 容器变化
+events Get real time events from the server # 从 docker 服务获取容器实时事件
+exec Run a command in an existing container# 在已存在的容器上运行命令
+export Stream the contents of a container as a tar archive # 导出容器的内容流作为一个 tar 归档文件[对应 import ]
+history Show the history of an image# 展示一个镜像形成历史
+images List images# 列出系统当前镜像
+import Create a new filesystem image from the contents of a tarball # 从tar包中的内容创建一个新的文件系统映像[对应export]
+info Display system-wide information# 显示系统相关信息
+inspect Return low-level information on a container # 查看容器详细信息
+kill Kill a running container# kill 指定 docker 容器
+load Load an image from a tar archive# 从一个 tar 包中加载一个镜像[对应 save]
+login Register or Login to the docker registry server # 注册或者登陆一个docker 源服务器
+logout  Log out from a Docker registry server# 从当前 Dockerregistry 退出
+logs  Fetch the logs of a container# 输出当前容器日志信息
+port Lookup the public-facing port which is NAT-ed to PRIVATE_PORT #查看映射端口对应的容器内部源端口
+pause Pause all processes within a container# 暂停容器
+ps List containers # 列出容器列表
+pull Pull an image or a repository from the docker registry server #从docker镜像源服务器拉取指定镜像或者库镜像
+push Push an image or a repository to the docker registry server #推送指定镜像或者库镜像至docker源服务器
+restart Restart a running container# 重启运行的容器
+rm Remove one or more containers# 移除一个或者多个容器
+rmi Remove one or more images# 移除一个或多个镜像[无容器使用该镜像才可删除，否则需删除相关容器才可继续或 -f 强制删除]
+run  Run a command in a new container # 创建一个新的容器并运行一个命令
+save Save an image to a tar archive# 保存一个镜像为一个tar 包[对应 load]
+search Search for an image on the Docker Hub# 在 docker hub 中搜索镜像
+start Start a stopped containers# 启动容器
+stop Stop a running containers# 停止容器
+tag Tag an image into a repository # 给源中镜像打标签
+top Lookup the running processes of a container # 查看容器中运行的进程信息
+unpause Unpause a paused container# 取消暂停容器
+version Show the docker version information# 查看 docker 版本号
+wait Block until a container stops, then print its exit code # 截取容器停止时的退出状态值
+```
+
+docker的命令是十分多的
+
+
+
+
+
+## 作业练习
+
+> 使用Docker 安装 Nginx
+
+
+
+> 使用docker安装 tomcat
+
+
+
+> 使用docker 部署 es + kibana
+
+## 可视化
 
 # Docker镜像
 
