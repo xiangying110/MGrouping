@@ -862,7 +862,94 @@ docker的命令是十分多的
 
 > 使用Docker 安装 Nginx
 
+```shell
+# 1、搜索镜像
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker search nginx
+NAME         DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED
+nginx         Official build of Nginx.                        17121     [OK]       
 
+# 2、拉取镜像
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker pull nginx
+Using default tag: latest
+latest: Pulling from library/nginx
+a2abf6c4d29d: Already exists 
+a9edb18cadd1: Pull complete 
+589b7251471a: Pull complete 
+186b1aaa4aa6: Pull complete 
+b4df32aa5a72: Pull complete 
+a0bcbecc962e: Pull complete 
+Digest: sha256:0d17b565c37bcbd895e9d92315a05c1c3c9a29f762b011a10c54a66cd53c9b31
+Status: Downloaded newer image for nginx:latest
+docker.io/library/nginx:latest
+
+# 3、启动容器
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker images
+REPOSITORY      TAG          IMAGE ID       CREATED         SIZE
+<none>          <none>       e619f88231ff   3 months ago    41.8MB
+nginx           latest       605c77e624dd   6 months ago    141MB
+wordpress       latest       c3c92cc3dcb1   6 months ago    616MB
+mysql           5.7          c20987f18b13   7 months ago    448MB
+elasticsearch   7.16.1       405db9d10ee0   7 months ago    642MB
+logstash        7.16.1       eeed133b351f   7 months ago    999MB
+kibana          7.16.1       02f1088fcc07   7 months ago    1.3GB
+redis           alpine       3900abf41552   7 months ago    32.4MB
+python          3.6-alpine   3a9e80fa4606   7 months ago    40.7MB
+python          3.7-alpine   a1034fd13493   7 months ago    41.8MB
+centos          latest       5d0da3dc9764   10 months ago   231MB 
+
+# -d  后台运行
+# --name 给容器命名
+# -p 宿舍主机端口:容器内部端口
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker run -d --name mynginx -p 3500:80 nginx
+7a2107b48f989afecd36ffd435ec9fbab71758b0843d931e9dbd9743ed5ba2a6
+
+[root@iZ2ze0hojhrob2v7mjyayoZ ~]# docker ps
+CONTAINER ID  IMAGE  COMMAND                 CREATED        STATUS          PORTS                  NAMES
+7a2107b48f98  nginx  "/docker-entrypoint.…"  22 seconds ago  Up 20 seconds  0.0.0.0:3500->80/tcp, :::3500->80/tcp                                                  mynginx
+
+# 4、测试访问
+[root@kuangshen ~]# curl localhost:3500
+<html>
+<title>Welcome to nginx!</title> # ok
+....
+</html>
+
+# 5、进入容器
+[root@kuangshen ~]# docker exec -it mynginx /bin/bash
+root@a95d5f2f057f:/# whereis nginx  # 寻找nginx
+nginx: /usr/sbin/nginx /usr/lib/nginx /etc/nginx /usr/share/nginx
+
+root@7a2107b48f98:~# cd /etc/nginx/
+root@7a2107b48f98:/etc/nginx# ls
+conf.d	fastcgi_params	mime.types  modules  nginx.conf  scgi_params  uwsgi_params
+
+root@a95d5f2f057f:/# cd /usr/share/nginx # nginx 的路径
+root@a95d5f2f057f:/usr/share/nginx# ls
+html
+root@a95d5f2f057f:/usr/share/nginx# cd html # 首页的位置
+root@a95d5f2f057f:/usr/share/nginx/html# ls
+50x.html index.html
+root@a95d5f2f057f:/usr/share/nginx/html# cat index.html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+body {
+width: 35em;
+margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif;
+}
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+</html>
+```
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220719221132514.png" alt="image-20220719221132514" style="zoom:50%;" />
+
+思考：我们每次改动ngnix配置文件，都要进入容器内部？这样十分的麻烦，我们是否可以在容器外部提供一个映射路径，达到在容器外部修改文件内容，容器内部就可以修改的目的，-v数据卷
 
 > 使用docker安装 tomcat
 
