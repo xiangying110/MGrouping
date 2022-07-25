@@ -953,9 +953,73 @@ font-family: Tahoma, Verdana, Arial, sans-serif;
 
 > 使用docker安装 tomcat
 
+```shell
+# 官方文档解释
+# -it ：交互模式
+# --rm：容器启动成功并退出以后容器就自动移除，一般在测试情况下使用！
+docker run -it --rm tomcat:9.0
+# 1、下载tomcat镜像
+docker pull tomcat
+# 2、启动
+docker run -d -p 8080:8080 --name tomcat9 tomcat
+# 3、进入tomcat
+docker exec -it tomcat9 /bin/bash
+# 4、思考：我们以后要部署项目，还需要进入容器中，是不是十分麻烦，要是有一种技术，可以将容器内和我们Linux进行映射挂载就好了？我们后面会将数据卷技术来进行挂载操作，也是一个核心内容，这里大家先听听名词就好，我们很快就会讲到！
+```
+
 
 
 > 使用docker 部署 es + kibana
+
+```shell
+# 我们启动es这种容器需要考虑几个问题
+1、端口暴露问题 9200、9300
+2、数据卷的挂载问题 data、plugins、conf
+3、吃内存 - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+# 扩展命令
+docker stats 容器id # 查看容器的cpu内存和网络状态
+# 1、启动es测试
+docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e
+"
+discovery.type=single-node" elasticsearch:7.6.2
+# 2、启动之后很卡，使用 docker stats 容器id 查看下cpu状态 ，发现占用的很大
+CONTAINER ID	NAME	CPU %	MEM USAGE / LIMIT	MEM %
+249ae46da625	elasticsearch	0.00%	1.036GiB / 1.716GiB	60.37%
+# 3、测试访问
+[root@kuangshen data]# curl localhost:9200
+{
+19	"name" : "249ae46da625",
+20	"cluster_name" : "docker-cluster",
+21	"cluster_uuid" : "_Ho_i4fOTUesNc_II35sSA",
+22	"version" : {
+23	"number" : "7.6.2",
+24	"build_flavor" : "default",
+25	"build_type" : "docker",
+26	"build_hash" : "ef48eb35cf30adf4db14086e8aabd07ef6fb113f", 27	"build_date" : "2020-03-26T06:34:37.794943Z",
+ 
+28	"build_snapshot" : false, "lucene_version" : "8.4.0",
+"minimum_wire_compatibility_version" : "6.8.0", "minimum_index_compatibility_version" : "6.0.0-beta1"
+},
+"tagline" : "You Know, for Search"
+}
+
+# 4、增加上内存限制启动
+docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e ES_JAVA_OPTS="-Xms64m -Xmx512m" elasticsearch:7.6.2
+
+# 5、启动之后，使用 docker stats 查看下cpu状态
+CONTAINER ID	NAME	CPU %	MEM USAGE / LIMIT	MEM %
+d2860684e7e4	elasticsearch	0.24%	358.3MiB / 1.716GiB	20.40%
+
+# 6、测试访问，效果一样，ok！
+[root@kuangshen data]# curl localhost:9200
+
+# 思考：如果我们要使用 kibana , 如果配置连接上我们的es呢？网络该如何配置呢？
+
+
+
+```
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220720123812187.png" alt="image-20220720123812187" style="zoom:50%;" />
 
 ## 可视化
 
