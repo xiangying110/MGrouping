@@ -1023,7 +1023,250 @@ d2860684e7e4	elasticsearch	0.24%	358.3MiB / 1.716GiB	20.40%
 
 ## 可视化
 
+- Portainer（先用这个）
+
+  ```shell
+  docker run -d -p 8088:9000 \ --restart=always -v /var/run/docker.sock:/var/run/docker.sock --privileged=true portainer/portainer
+  ```
+
+- Rancher（CI/CD再用这个）
+
+  ```shell
+  #安装rancher-server
+  docker run --name rancher-server -p 8000:8080 -v
+  /etc/localtime:/etc/localtime:ro -d rancher/server
+  #安装agent
+  docker run --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v
+  /var/lib/rancher:/var/lib/rancher rancher/agent:v1.2.11
+  http://39.101.191.131:8000/v1/scripts/D3DBD43F263109BB881F:1577750400000:7M0y
+  BzCw4XSxJklD7TpysYIpI
+  ```
+
+  **介绍：**
+  Portainer是Docker的图形化管理工具，提供状态显示面板、应用模板快速部署、容器镜像网络数据卷
+  的基本操作（包括上传下载镜像，创建容器等操作）、事件日志显示、容器控制台操作、Swarm集群和
+  服务等集中管理和操作、登录用户管理和控制等功能。功能十分全面，基本能满足中小型单位对容器管
+  理的全部需求。
+  如果仅有一个docker宿主机，则可使用单机版运行，Portainer单机版运行十分简单，只需要一条语句即
+  可启动容器，来管理该机器上的docker镜像、容器等数据。
+
+  访问方式：http://IP:8088
+  首次登陆需要注册用户，给admin用户设置密码：
+
+  <img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725194938366.png" alt="image-20220725194938366" style="zoom:50%;" />
+
+单机版这里选择local即可，选择完毕，点击Connect即可连接到本地docker：
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725195027153.png" alt="image-20220725195027153" style="zoom:50%;" />
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725195104862.png" alt="image-20220725195104862" style="zoom:50%;" />
+
+**汉化安装**
+
+1. 创建 portainer 工作目录
+
+   ```shell
+   mkdir -p /data/portainer/data /data/portainer/public
+   ```
+
+2. 进入Portainer文件夹
+
+   ```shell
+   cd /data/portainer
+   ```
+
+3. 下载汉化文件
+
+   ```shell
+   wget https://labx.me/dl/4nat/public.zip
+   ```
+
+4. 解压汉化文件
+
+   ```shell
+   unzip public.zip
+   ```
+
+5. 安装Portainer
+
+   ```shell
+   docker run -d --restart=always --name portainer -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v /data/portainer/data:/data -v /data/portainer/public:/public portainer/portainer:latest
+   ```
+
+   ```shell
+   docker run -d -p 8000:8000 -p 9000:9000 --name portainer     --restart=always     -v /var/run/docker.sock:/var/run/docker.sock     -v portainer_data:/data     portainer/portainer
+   ```
+
 # Docker镜像
+
+## 镜像是什么
+
+镜像是一种轻量级、可执行的独立软件包，用来打包软件运行环境和基于运行环境开发的软件，它包含运行某个软件所需的所有内容，包括代码、运行时、库、环境变量和配置文件。
+
+如何获得镜像
+
+1、从镜像仓库拉取
+
+2、朋友处拷贝
+
+3、自己制作dockerFile
+
+## Docker镜像加载原理
+
+> UnionFS （联合文件系统）
+
+UnionFS（联合文件系统）：Union文件系统（UnionFS）是一种分层、轻量级并且高性能的文件系统，它支持对文件系统的修改作为一次提交来一层层的叠加，同时可以将不同目录挂载到同一个虚拟文件系统下(unite several directories into a single virtual ﬁlesystem)。Union 文件系统是 Docker 镜像的基础。镜像可以通过分层来进行继承，基于基础镜像（没有父镜像），可以制作各种具体的应用镜像。
+
+特性：一次同时加载多个文件系统，但从外面看起来，只能看到一个文件系统，联合加载会把各层文件系统叠加起来，这样最终的文件系统会包含所有底层的文件和目录
+
+> Docker镜像加载原理
+
+docker的镜像实际上由一层一层的文件系统组成，这种层级的文件系统UnionFS。bootfs(boot ﬁle system)主要包含bootloader和kernel, bootloader主要是引导加载kernel, Linux刚启动时会加载bootfs文件系统，在Docker镜像的最底层是bootfs。这一层与我们典型的Linux/Unix系统是一样的，包含boot加载器和内核。当boot加载完成之后整个内核就都在内存中了，此时内存的使用权已由bootfs转交给内核，此时系统也会卸载bootfs。
+
+rootfs (root ﬁle system) ，在bootfs之上。包含的就是典型 Linux 系统中的 /dev, /proc, /bin, /etc 等标准目录和文件。rootfs就是各种不同的操作系统发行版，比如Ubuntu，Centos等等。
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725203151295.png" alt="image-20220725203151295" style="zoom:60%;" />
+
+平时我们安装进虚拟机的CentOS都是好几个G，为什么Docker这里才200M？
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725203321264.png" alt="image-20220725203321264" style="zoom:60%;" />
+
+对于一个精简的OS，rootfs 可以很小，只需要包含最基本的命令，工具和程序库就可以了，因为底层直接用Host的kernel，自己只需要提供rootfs就可以了。由此可见对于不同的linux发行版, bootfs基本是一致的, rootfs会有差别, 因此不同的发行版可以公用bootfs。
+
+## 分层理解
+
+> 分层的镜像
+
+我们可以去下载一个镜像，注意观察下载的日志输出，可以看到是一层一层的在下载！
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725203412490.png" alt="image-20220725203412490" style="zoom:60%;" />
+
+思考：为什么Docker镜像要采用这种分层的结构呢？
+最大的好处，我觉得莫过于是资源共享了！比如有多个镜像都从相同的Base镜像构建而来，那么宿主机
+只需在磁盘上保留一份base镜像，同时内存中也只需要加载一份base镜像，这样就可以为所有的容器服
+务了，而且镜像的每一层都可以被共享。
+查看镜像分层的方式可以通过 **docker image inspect** 命令！
+
+```shell
+[root@iZ2ze0hojhrob2v7mjyayoZ portainer]# docker image inspect  redis:alpine
+[
+    {
+        "Id": "sha256:3900abf4155226f3f62401054b872ce0c85b5c3b47275cae3d16a39c8646e36b",
+        "RepoTags": [
+            "redis:alpine"
+        ],
+        "RepoDigests": [
+            "redis@sha256:4bed291aa5efb9f0d77b76ff7d4ab71eee410962965d052552db1fb80576431d"
+        ],
+        "Parent": "",
+        "Comment": "",
+        "Created": "2021-11-30T04:03:28.37886782Z",
+        "Container": "02f716763d40c653f88da330ad175aa562d5080888ee332b88a6e9ee48da533f",
+
+ "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:8d3ac3489996423f53d6087c81180006263b79f206d3fdec9e66f0e27ceb8759",
+                "sha256:f424150e7bdd0a2faa823d3688da0979e3d03bdb04e2de32a4dcc671468a1612",
+                "sha256:af2908c6d8d463c412721e67623b1650c6b3d93ade7f339a4bcb6529bb4b844b",
+                "sha256:a0d30d692d3859098e3e05d5ecd5eefb8416be126acc874d3c491ffe837864e1",
+                "sha256:ea119ba57232880f7dc99bd408d39c38916ac2de59e9e9df3ba6ebab9d2ca882",
+                "sha256:4093453af75778dbe4cec1ca6b018ec83d5858db848ef97b2a5b56cfbfcc99a3"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        }
+    }
+]
+
+```
+
+**理解：**
+所有的 Docker 镜像都起始于一个基础镜像层，当进行修改或增加新的内容时，就会在当前镜像层之上，创建新的镜像层。
+举一个简单的例子，假如基于 Ubuntu Linux 16.04 创建一个新的镜像，这就是新镜像的第一层；如果在该镜像中添加 Python包，就会在基础镜像层之上创建第二个镜像层；如果继续添加一个安全补丁，就会创建第三个镜像层。该镜像当前已经包含 3 个镜像层，如下图所示（这只是一个用于演示的很简单的例子）。
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725204102720.png" alt="image-20220725204102720" style="zoom:67%;" />
+
+在添加额外的镜像层的同时，镜像始终保持是当前所有镜像的组合，理解这一点非常重要。下图中举了一个简单的例子，每个镜像层包含 3 个文件，而镜像包含了来自两个镜像层的 6 个文件。
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725205711958.png" alt="image-20220725205711958" style="zoom:67%;" />
+
+上图中的镜像层跟之前图中的略有区别，主要目的是便于展示文件。
+下图中展示了一个稍微复杂的三层镜像，在外部看来整个镜像只有 6 个文件，这是因为最上层中的文件
+7 是文件 5 的一个更新版本。
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725205748975.png" alt="image-20220725205748975" style="zoom:67%;" />
+
+这种情况下，上层镜像层中的文件覆盖了底层镜像层中的文件。这样就使得文件的更新版本作为一个新镜像层添加到镜像当中。
+Docker 通过存储引擎（新版本采用快照机制）的方式来实现镜像层堆栈，并保证多镜像层对外展示为统一的文件系统。
+
+Linux 上可用的存储引擎有 AUFS、Overlay2、Device Mapper、Btrfs 以及 ZFS。顾名思义，每种存储引擎都基于 Linux 中对应的文件系统或者块设备技术，并且每种存储引擎都有其独有的性能特点。Docker 在 Windows 上仅支持 windowsﬁlter 一种存储引擎，该引擎基于 NTFS 文件系统之上实现了分层和 CoW[1]。
+
+下图展示了与系统显示相同的三层镜像。所有镜像层堆叠并合并，对外提供统一的视图。
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725205834523.png" alt="image-20220725205834523" style="zoom:67%;" />
+
+> 特点
+
+Docker镜像都是只读的，当容器启动时，一个新的可写层被加载到镜像的顶部！这一层就是我们通常说的容器层，容器之下的都叫镜像层！
+
+<img src="C:\Users\chen_ll\AppData\Roaming\Typora\typora-user-images\image-20220725210821835.png" alt="image-20220725210821835" style="zoom:67%;" />
+
+
+
+## 镜像Commit
+
+docker commit 从容器创建一个新的镜像。
+
+```shell
+docker commit 提交容器副本使之成为一个新的镜像！
+# 语法 命令和git命令很像
+docker commit -m="提交的描述信息" -a="作者" 容器id 要创建的目标镜像名:[标签名]
+```
+
+**测试**
+
+```shell
+#1、启动一个Tomcat
+#2、发现这个Tomcat没有webapp应用，镜像的原因，官方镜像默认是没有文件的
+#3、自己拷贝进去基本的文件
+#4、将我们操作过的容器，commit提交一个镜像
+```
+
+```shell
+# 1、从Docker Hub 下载tomcat镜像到本地并运行 -it 交互终端 -p 端口映射
+docker run -it -p 8080:8080 tomcat
+# 注意：坑爹：docker启动官方tomcat镜像的容器，发现404是因为使用了加速器，而加速器里的
+tomcat的webapps下没有root等文件！
+# 下载tomcat官方镜像，就是这个镜像（阿里云里的tomcat的webapps下没有任何文件）
+# 进入tomcat查看cd到webapps下发现全部空的，反而有个webapps.dist里有对应文件，cp -r
+到webapps下！
+root@aba865b53114:/usr/local/tomcat# cp -r webapps.dist/* webapps
+# 2、删除上一步镜像产生的tomcat容器的文档
+docker ps
+# 查看容器id
+docker exec -it 容器id /bin/bash
+/usr/local/tomcat # cd webapps/
+/usr/local/tomcat/webapps # ls -l # 查看是否存在 docs文件夹
+/usr/local/tomcat/webapps # curl localhost:8080/docs/ # 可以看到 docs 返回的内容
+/usr/local/tomcat/webapps # rm -rf docs # 删除它
+/usr/local/tomcat/webapps # curl localhost:8080/docs/ # 再次访问返回404
+# 3、当前运行的tomcat实例就是一个没有docs的容器，我们使用它为模板commit一个没有docs的
+tomcat新镜像， tomcat02
+docker ps -l # 查看容器的id
+# 注意：commit的时候，容器的名字不能有大写，否则报错：invalid reference format
+docker commit -a="kuangshen" -m="no tomcat docs" 1e98a2f815b0 tomcat02:1.1
+sha256:cdccd4674f93ad34bf73d9db577a20f027a6d03fd1944dc0e628ee4bf17ec748
+[root@kuangshen /]# docker images # 查看，我们自己提交的镜像已经OK了！
+
+# 4、这个时候，我们的镜像都是可以使用的，大家可以启动原来的tomcat，和我们新的tomcat02来
+测试看看！
+[root@kuangshen ~]# docker run -it -p 8080:8080 tomcat02:1.1
+# 如果你想要保存你当前的状态，可以通过commit，来提交镜像，方便使用，类似于 VM 中的快照！
+```
+
+
 
 # 容器数据卷
 
