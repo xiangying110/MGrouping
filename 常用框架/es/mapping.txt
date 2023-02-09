@@ -1,0 +1,775 @@
+# mapping  
+#6.x 创建索引
+PUT my_index
+{
+  "mappings": {
+    "doc": {
+      "dynamic":"strict",
+      "properties": {
+        "title": {
+          "type": "text"
+        },
+        "name": {
+          "type": "keyword"
+        },
+        "age": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
+#7.x
+PUT my_index
+{
+  "mappings": {
+      "dynamic":"strict",
+      "properties": {
+        "title": {
+          "type": "text"
+        },
+        "name": {
+          "type": "keyword"
+        },
+        "age": {
+          "type": "integer"
+        }
+      }
+  }
+}
+
+PUT my_index
+{
+  "mappings": {
+      "dynamic":false,
+      "properties": {
+        "title": {
+          "type": "text"
+        },
+        "name": {
+          "type": "keyword"
+        },
+        "age": {
+          "type": "integer"
+        }
+      }
+  }
+}
+#写入数据，desc在刚才的字段里是没有的
+#6.x
+PUT my_index/doc/1
+{
+  "title":"hello,world",
+  "desc":"nothing here"
+}
+#7.x
+POST my_index/_doc/1
+{
+  "title":"hello,world",
+  "desc":"nothing here"
+}
+
+GET my_index/
+
+DELETE my_index
+#6.x
+GET my_index/doc/1
+#k7.x
+GET my_index/_doc/1
+#6.x
+GET my_index/doc/_search
+{
+  "query":{
+    "match":{
+      "desc":"here"
+    }
+  }
+}
+#7.x
+GET my_index/_search
+{
+  "query":{
+    "match":{
+      "desc":"here"
+    }
+  }
+}
+
+# copy_to
+DELETE my_index
+#6.x
+PUT my_index
+{
+  "mappings": {
+    "doc": {
+      "properties": {
+        "first_name": {
+          "type": "text",
+          "copy_to": "full_name" 
+        },
+        "last_name": {
+          "type": "text",
+          "copy_to": "full_name" 
+        },
+        "full_name": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+#7.x
+PUT my_index
+{
+  "mappings": {
+      "properties": {
+        "first_name": {
+          "type": "text",
+          "copy_to": "full_name" 
+        },
+        "last_name": {
+          "type": "text",
+          "copy_to": "full_name" 
+        },
+        "full_name": {
+          "type": "text"
+        }
+      }
+    }
+}
+
+
+PUT my_index/doc/1
+{
+  "first_name": "John",
+  "last_name": "Smith"
+}
+PUT my_index/_doc/1
+{
+  "first_name": "John",
+  "last_name": "Smith"
+}
+
+GET my_index/_search
+{
+  "query": {
+    "match": {
+      "full_name": { 
+        "query": "John Smith",
+        "operator": "and"
+      }
+    }
+  }
+}
+
+
+# index
+DELETE my_index
+PUT my_index
+{
+  "mappings": {
+    "doc": {
+      "properties": {
+        "cookie": {
+          "type": "text",
+          "index": false
+        }
+      }
+    }
+  }
+}
+
+PUT my_index
+{
+  "mappings": {
+      "properties": {
+        "cookie": {
+          "type": "text",
+          "index": false
+        }
+      }
+    
+  }
+}
+
+PUT my_index/doc/1
+{
+  "cookie":"name=alfred"
+}
+
+PUT my_index/_doc/1
+{
+  "cookie":"name=alfred"
+}
+
+GET my_index/_search
+{
+  "query":{
+    "match": {
+      "cookie": "name"
+    }
+  }
+}
+
+# null value
+DELETE my_index
+#6.x
+PUT my_index1
+{
+  "mappings": {
+    "doc":{
+      "properties": {
+        "status_code": {
+          "type":       "keyword",
+          "null_value": "NULL" 
+        }
+      }
+    }
+  }
+}
+
+#7.x
+PUT my_index
+{
+  "mappings": {
+      "properties": {
+        "status_code": {
+          "type":       "keyword",
+          "null_value": "NULL" 
+        }
+      }
+  }
+}
+#6.x
+PUT my_index/my_type/1
+{
+  "status_code": null
+}
+PUT my_index/_doc/1
+{
+  "status_code": null
+}
+
+PUT my_index/_doc/2
+{
+  "status_code": [] 
+}
+
+GET my_index/_search
+{
+  "query": {
+    "term": {
+      "status_code": "NULL" 
+    }
+  }
+}
+
+GET my_index/_doc/1
+
+
+# copy_to
+DELETE my_index
+PUT my_index
+{
+  "mappings": {
+    "doc": {
+      "properties": {
+        "first_name": {
+          "type": "text",
+          "copy_to": "full_name" 
+        },
+        "last_name": {
+          "type": "text",
+          "copy_to": "full_name" 
+        },
+        "full_name": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+
+PUT my_index/doc/1
+{
+  "first_name": "John",
+  "last_name": "Smith"
+}
+
+GET my_index/_search
+{
+  "query": {
+    "match": {
+      "full_name": { 
+        "query": "John Smith",
+        "operator": "and"
+      }
+    }
+  }
+}
+
+#index
+DELETE my_index
+
+PUT my_index
+{
+  "mappings": {
+    "doc": {
+      "properties": {
+        "cookie": {
+          "type": "text",
+          "index": false
+        }
+      }
+    }
+  }
+}
+
+PUT my_index/doc/1
+{
+  "cookie":"name=alfred"
+}
+
+GET my_index/_search
+{
+  "query":{
+    "match": {
+      "cookie": "name"
+    }
+  }
+}
+
+PUT test
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "analysis": {
+        "analyzer": {
+          "trigram": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": [
+              "standard",
+              "shingle"
+            ]
+          },
+          "reverse": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": [
+              "standard",
+              "reverse"
+            ]
+          }
+        },
+        "filter": {
+          "shingle": {
+            "type": "shingle",
+            "min_shingle_size": 2,
+            "max_shingle_size": 3
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "doc": {
+      "properties": {
+        "title": {
+          "type": "text",
+          "fields": {
+            "trigram": {
+              "type": "text",
+              "analyzer": "trigram"
+            },
+            "reverse": {
+              "type": "text",
+              "analyzer": "reverse"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+# dynamic mapping  不用先创建mapping，
+#es会自动根据文档的数据创建mapping
+DELETE test_index
+PUT test_index/_doc/1
+{
+  "name":"alfred",
+  "message_info":"I'm a good boy"
+}
+
+GET test_index/_mapping
+DELETE test_index
+PUT /test_index/doc/1
+{
+  "username":"alfred",
+  "age":1.2
+}
+
+GET my_index/_mapping
+
+PUT my_index/doc/1
+{
+  "name":"alfred",
+  "age":10
+}
+
+GET /test_index/_mapping
+
+DELETE test_index
+PUT /test_index/doc/1
+{
+  "username":"alfred",
+  "age":14,
+  "birth":"1988-10-10",
+  "married":false,
+  "year":"18",
+  "tags":["boy","fashion"],
+  "money":100.1
+}
+
+GET /test_index/_mapping
+
+# date
+DELETE my_index
+PUT my_index/
+{
+  "mappings": {
+      "dynamic_date_formats": ["MM/dd/yyyy"]
+  }
+}
+
+PUT my_index/_doc/1
+{
+  "create_date": "09/25/2015"
+}
+PUT my_index/_doc/1
+{
+  "create_date": "2015-09-01"
+}
+
+GET my_index/_mapping
+
+
+# numeric detection
+DELETE my_index
+PUT my_index
+{
+  "mappings": {
+      "numeric_detection": true
+  }
+}
+PUT my_index/my_type/1
+{
+  "my_float":   "1.0", 
+  "my_integer": "1" 
+}
+
+GET my_index/_mapping
+
+# store
+PUT test_index_11/
+{
+  "mappings": {
+    "doc": {
+      "_source": {
+        "enabled":false
+      }, 
+      "properties": {
+        "name": {
+          "type": "keyword",
+          "store": true
+        },
+        "age":{
+          "store":true
+        }
+      }
+    }
+  }
+}
+
+PUT test_index_10
+{
+  "mappings": {
+    "doc": {
+      "dynamic_templates": [
+        {
+          "double_as_float": {
+            "match_mapping_type": "double",
+            "mapping": {
+              "type": "float"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+DELETE test_index_11
+PUT test_index_11
+GET test_index_11
+DELETE _template/*
+PUT test_index_11/doc/_mapping
+{
+  "_source": false,
+  "properties": {
+    "name": {
+      "type": "keyword",
+      "store": true
+    },
+    "age": {
+      "type": "long",
+      "store": true
+    },
+    "desc": {
+      "type": "text",
+      "fielddata": true,
+      "store": true
+    }
+  }
+}
+
+
+PUT test_index_11
+{
+  "mappings": {
+    "doc": {
+      "_source": {
+        "enabled":false
+      },
+      "properties": {
+        "name": {
+          "type": "keyword",
+          "store": true
+        },
+        "age": {
+          "type": "long",
+          "store": true
+        },
+        "desc": {
+          "type": "text",
+          "fielddata": true,
+          "store": true
+        }
+      }
+    }
+  }
+}
+
+
+PUT test_index_11/doc/2
+{
+  "money":10.3,
+  "name":"asf",
+  "age":12,
+  "desc":"hello,world"
+}
+
+GET test_index_11/_search
+
+GET test_index_11/_search?stored_fields=*
+
+
+GET test_index_11/_search
+{
+  "stored_fields": ["name","age","desc"], 
+  "docvalue_fields": ["desc"]
+}
+
+
+# dynamic template
+DELETE test_index
+PUT test_index
+{
+  "mappings": {
+      "dynamic_templates": [
+        {
+          "strings": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword"
+            }
+          }
+        }
+      ]
+  }
+}
+
+PUT test_index/_doc/1
+{
+  "name":"alfred"
+}
+
+GET test_index/_mapping
+
+DELETE test_index
+
+PUT test_index
+{
+  "mappings": {
+  
+      "dynamic_templates": [
+        {
+          "message_as_text": {
+            "match_mapping_type": "string",
+            "match":   "message*",
+            "mapping": {
+              "type": "text"
+            }
+          }
+        }
+      ]
+  }
+}
+
+DELETE test_index
+PUT test_index
+{
+  "mappings": {
+    "doc": {
+      "dynamic_templates": [
+        {
+          "message_as_text": {
+            "match_mapping_type": "string",
+            "match": "message*",
+            "mapping": {
+              "type": "text"
+            }
+          }
+        },
+        {
+          "strings_as_keywords": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword"
+            }
+          }
+        }
+        
+      ]
+    }
+  }
+}
+
+PUT test_index/doc/1
+{
+  "name":"alfred",
+  "message":"handsome boy"
+}
+
+GET test_index/_mapping
+
+
+# advice for custom mapping
+DELETE my_product_index
+PUT my_product_index/_doc/1
+{
+  "referrer": "-",
+  "response_code": "200",
+  "remote_ip": "171.221.139.157",
+  "method": "POST",
+  "user_name": "-",
+  "http_version": "1.1",
+  "body_sent": {
+    "bytes": "0"
+  },
+  "url": "/analyzeVideo"
+}
+
+GET my_product_index/_mapping
+
+DELETE my_product_index
+PUT my_product_index
+{
+  "mappings": {
+    "doc": {
+      "dynamic_templates": [
+        {
+          "strings": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "body_sent": {
+          "properties": {
+            "bytes": {
+              "type": "long"
+            }
+          }
+        },
+        "url": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+
+GET my_product_index/_mapping
+
+
+# index template索引模板
+#获取所有的模板
+GET _template
+
+PUT _template/test_template
+{
+  "index_patterns": ["te*", "bar*"],
+  "order":0,
+  "settings": {
+    "number_of_shards": 1
+  },
+  "mappings": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "name": {
+          "type": "keyword"
+        }
+      }
+  }
+}
+
+PUT _template/test_template2
+{
+  "index_patterns": ["test*"],
+  "order":1,
+  "settings": {
+    "number_of_shards": 1
+  },
+  "mappings": {
+      "_source": {
+        "enabled": true
+      }
+  }
+}
+
+
+PUT foo_index
+GET foo_index/_mapping
+
+PUT bar_index
+GET bar_index/
+
+DELETE test_index
+PUT test_index
+GET test_index/
+
+
+
+
+
+

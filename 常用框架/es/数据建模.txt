@@ -1,0 +1,575 @@
+#modeling
+DELETE blog_index
+PUT blog_index
+{
+  "mappings": {
+      "properties": {
+        "title":{
+          "type": "text",
+          "fields": {
+            "keyword":{
+              "type":"keyword",
+              "ignore_above": 100
+            }
+          }
+        },
+        "publish_date":{
+          "type":"date"
+        },
+        "author":{
+          "type":"keyword",
+          "ignore_above": 100
+        },
+        "abstract":{
+          "type": "text"
+        },
+        "url":{
+          "enabled":false
+        },
+        "content":{
+          "type":"text"
+        }
+      }
+  }
+}
+
+
+PUT blog_index/_doc/1
+{
+  "title":"blog title",
+  "content":"blog content"
+}
+
+
+GET blog_index/_search
+{
+  "stored_fields": ["title"],
+  "query":{
+    "match": {
+      "content": "blog"
+    }
+  },
+  "highlight": {
+    "fields": {"content": {}}
+  }
+}
+
+PUT blog_index
+{
+  "mappings": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "title": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 100
+            }
+          },
+          "store": true
+        },
+        "publish_date": {
+          "type": "date",
+          "store": true
+        },
+        "author": {
+          "type": "keyword",
+          "ignore_above": 100, 
+          "store": true
+        },
+        "abstract": {
+          "type": "text",
+          "store": true
+        },
+        "content": {
+          "type": "text",
+          "store": true
+        },
+        "url": {
+          "type": "keyword",
+          "doc_values":false,
+          "norms":false,
+          "ignore_above": 100, 
+          "store": true
+        }
+      }
+  
+  }
+}
+
+PUT blog_index/doc/1
+{
+  "title":"Blog Number One",
+  "author":"alfred"
+}
+
+
+
+GET blog_index/_search
+{
+  "stored_fields": ["title","publish_date","author","abstract","url"], 
+  "query": {
+    "match": {
+      "title": "blog"
+    }
+  },
+  "highlight": {
+    "fields":{
+      "title": {}
+    }
+  }
+}
+
+
+
+# nested objects
+DELETE blog_index
+PUT blog_index/_doc/2
+{
+  "title": "Blog Number One",
+  "author": "alfred",
+  "comments": [
+    {
+      "username": "lee",
+      "date": "2017-01-02",
+      "content": "awesome article!"
+    },
+    {
+      "username": "fax",
+      "date": "2017-04-02",
+      "content": "thanks!"
+    }
+  ]
+}
+
+
+GET blog_index
+
+GET blog_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "comments.username": "lee"
+          }
+        },
+        {
+          "match": {
+            "comments.content": "thanks"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+# nested mapping
+DELETE blog_index_nested
+PUT blog_index_nested
+{
+  "mappings": {
+      "properties": {
+        "title":{
+          "type": "text",
+          "fields": {
+            "keyword":{
+              "type":"keyword",
+              "ignore_above": 100
+            }
+          }
+        },
+        "publish_date":{
+          "type":"date"
+        },
+        "author":{
+          "type":"keyword",
+          "ignore_above": 100
+        },
+        "abstract":{
+          "type": "text"
+        },
+        "url":{
+          "enabled":false
+        },
+        "comments":{
+          "type":"nested", 
+          "properties": {
+            "username":{
+              "type":"keyword",
+              "ignore_above":100
+            },
+            "date":{
+              "type":"date"
+            },
+            "content":{
+              "type":"text"
+            }
+          }
+        }
+      }
+  }
+}
+
+PUT blog_index_nested/_doc/2
+{
+  "title": "Blog Number One",
+  "author": "alfred",
+  "comments": [
+    {
+      "username": "lee",
+      "date": "2017-01-02",
+      "content": "awesome article!"
+    },
+    {
+      "username": "fax",
+      "date": "2017-04-02",
+      "content": "thanks!"
+    }
+  ]
+}
+
+
+GET blog_index_nested/_search
+{
+  "query": {
+    "nested": {
+      "path": "comments",
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "comments.username": "lee"
+              }
+            },
+            {
+              "match": {
+                "comments.content": "awesome"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+
+
+#parent child
+DELETE blog_index_parent_child
+PUT blog_index_parent_child
+{
+  "mappings": {
+      "properties": {
+        "join": {
+          "type": "join",
+          "relations": {
+            "blog": "comment"
+          }
+        }
+      }
+  }
+}
+
+GET blog_index_parent_child
+
+GET blog_index_parent_child/_search
+
+PUT blog_index_parent_child/_doc/1
+{
+  "title":"blog",
+  "join":"blog"
+}
+
+PUT blog_index_parent_child/_doc/2
+{
+  "title":"blog2",
+  "join":"blog"
+}
+
+
+PUT blog_index_parent_child/_doc/comment-1?routing=1
+{
+  "comment":"comment world",
+  "join":{
+    "name":"comment",
+    "parent":1
+  }
+}
+
+
+PUT blog_index_parent_child/_doc/comment-2?routing=2
+{
+  "comment":"comment hello",
+  "join":{
+    "name":"comment",
+    "parent":2
+  }
+}
+
+GET blog_index_parent_child/_search
+
+# get all child for parent
+GET blog_index_parent_child/_search
+{
+  "query":{
+    "parent_id":{
+      "type":"comment",
+      "id":"2"
+    }
+  }
+}
+
+
+GET blog_index_parent_child/_search
+{
+  "query":{
+    "match": {
+      "comment": "world"
+    }
+  }
+}
+
+
+# get parent documents which has child matching following conditions
+GET blog_index_parent_child/_search
+{
+  "query":{
+    "has_child": {
+      "type": "comment",
+      "query": {
+        "match": {
+          "comment": "world"
+        }
+      }
+    }
+  }
+}
+
+GET blog_index_parent_child/_search
+{
+  "query":{
+    "has_parent": {
+      "parent_type": "blog",
+      "query": {
+        "match": {
+          "title": "blog"
+        }
+      }
+    }
+  }
+}
+
+
+# reindex
+POST blog_index/_update_by_query?conflicts=proceed
+
+GET blog_index/_doc/2
+GET blog_index/_search
+DELETE blog_new_index
+POST _reindex
+{
+  "source": {
+    "index": "blog_index"
+  },
+  "dest": {
+    "index": "blog_new_index"
+  }
+}
+
+GET blog_index
+GET blog_new_index
+GET blog_new_index/_search
+
+POST blog_index/_update_by_query?conflicts=proceed&wait_for_completion=false
+
+GET _tasks/kcLoliCGSTmvmlQtcJtmzw:4980218
+
+
+# key/value
+DELETE demo_common
+PUT demo_common
+{
+  "mappings": {
+      "properties": {
+        "url":{
+          "type": "keyword"
+        },
+        "@timestamp":{
+          "type": "date"
+        },
+        "cookies":{
+          "properties": {
+            "username":{
+              "type":"keyword"
+            },
+            "startTime":{
+              "type":"date"
+            },
+            "age":{
+              "type":"integer"
+            }
+          }
+        }
+      }
+  
+  }
+}
+
+POST /_reindex
+{
+  "source": {
+    "index":"demo_common"
+  },
+  "dest":{
+    "index":"demo_common_new"
+  }
+}
+
+GET demo_common_new
+
+PUT demo_common/_doc/1
+{
+  "url":"/home",
+  "@timestamp":"2017-09-10",
+  "cookies":{
+    "username":"time",
+    "startTime":"2017-09-10T12:09:02",
+    "age":12
+  }
+}
+
+PUT demo_common/_doc/2
+{
+  "url":"/index",
+  "@timestamp":"2017-10-10",
+  "cookies":{
+    "username":"tom",
+    "startTime":"2017-08-10T12:09:02",
+    "age":30
+  }
+}
+
+GET demo_common/_search
+{
+  "query":{
+    "range": {
+      "cookies.age": {
+        "gte": 10,
+        "lte": 20
+      }
+    }
+  }
+}
+
+DELETE demo_key_value
+PUT demo_key_value
+{
+  "mappings": {
+      "properties": {
+        "url": {
+          "type": "keyword"
+        },
+        "@timestamp": {
+          "type": "date"
+        },
+        "cookies": {
+          "type": "nested",
+          "properties": {
+            "cookieName":{
+              "type":"keyword"
+            },
+            "cookieValueKeyword":{
+              "type":"keyword"
+            },
+            "cookieValueInteger":{
+              "type":"integer"
+            },
+            "cookieValueDate":{
+              "type":"date"
+            }
+          }
+        }
+    
+    }
+  }
+}
+
+PUT demo_key_value/_doc/1
+{
+  "url": "/home",
+  "@timestamp": "2017-09-10",
+  "cookies": [
+    {
+      "cookieName": "username",
+      "cookieValueKeyword": "time"
+    },
+    {
+      "cookieName": "startTime",
+      "cookieValueDate": "2017-09-10T12:09:02"
+    },
+    {
+      "cookieName": "age",
+      "cookieValueInteger": 12
+    }
+  ]
+}
+
+PUT demo_key_value/_doc/2
+{
+  "url": "/index",
+  "@timestamp": "2017-10-10",
+  "cookies": [
+    {
+      "cookieName": "username",
+      "cookieValueKeyword": "tom"
+    },
+    {
+      "cookieName": "startTime",
+      "cookieValueDate": "2017-08-10T12:09:02"
+    },
+    {
+      "cookieName": "age",
+      "cookieValueInteger": 30
+    }
+  ]
+}
+
+
+
+GET demo_key_value/_search
+{
+  "query": {
+    "nested": {
+      "path": "cookies",
+      "query": {
+        "bool": {
+          "filter": [
+            {
+              "term": {
+                "cookies.cookieName": "age"
+              }
+            },
+            {
+              "range": {
+                "cookies.cookieValueInteger": {
+                  "gte": 15,
+                  "lte": 20
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+
+
+

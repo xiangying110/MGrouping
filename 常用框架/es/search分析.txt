@@ -1,0 +1,308 @@
+# dive into search
+DELETE test_search_relevance
+PUT test_search_relevance
+{
+  "settings": {
+    "index":{
+      "number_of_shards":1
+    }
+  }
+}
+
+POST test_search_relevance/_doc
+{
+  "name":"hello"
+}
+
+POST test_search_relevance/_doc
+{
+  "name":"hello,world"
+}
+
+POST test_search_relevance/_doc
+{
+  "name":"hello,world!a beautiful world"
+}
+
+GET test_search_relevance/_search
+
+GET test_search_relevance
+
+GET test_search_relevance/_search
+{
+  "explain": false, 
+  "query": {
+    "match":{
+      "name":"hello"
+    }
+  }
+}
+
+GET test_search_relevance/_search?search_type=dfs_query_then_fetch
+{
+  "query": {
+    "match":{
+      "name":"hello"
+    }
+  }
+}
+
+# sorting
+
+# score is null here
+GET test_search_index/_search
+{
+  "query":{
+    "match": {
+      "username": "alfred"
+    }
+  },
+  "sort":{
+    "birth":"desc"
+  }
+}
+
+GET test_search_index/_search
+{
+  "query":{
+    "match": {
+      "username": "alfred"
+    }
+  },
+  "sort": [
+    {
+      "birth": "desc"
+    },
+    {
+      "_score": "desc"
+    },
+    {
+      "_doc": "desc"
+    }
+  ]
+}
+
+PUT test_search_index/_doc/0
+{
+  "username":"aaa"
+}
+
+DELETE test_search_index/doc/2
+
+GET test_search_index
+
+GET test_search_index/_search
+{
+  "sort": [
+    {
+      "username": "asc"
+    }
+  ]
+}
+
+GET test_search_index/_search
+{
+  "sort": [
+    {
+      "username": "desc"
+    },
+    {
+      "_id": "desc"
+    }
+  ]
+}
+
+DELETE test_search_index/doc/5
+
+PUT test_search_index/doc/5
+{
+  "username":"alfred junior zoo"
+}
+
+DELETE test_search_index/doc/5
+
+GET test_search_index/_search
+{
+  "sort":{
+    "username.keyword":"desc"
+  }
+}
+
+
+
+# fielddata
+#fielddata只针对text类型
+PUT test_search_index/_mapping/doc
+{
+  "properties": {
+    "job":{
+      "type":"text",
+      "fielddata": true
+    }
+  }
+}
+
+# error when enable fielddata in other type
+PUT test_search_index/_mapping/doc
+{
+  "properties": {
+    "username":{
+      "type":"text",
+      "fielddata": false
+    },
+    "age":{
+      "type":"long",
+      "fielddata": true
+    }
+  }
+}
+
+GET test_search_index/
+
+
+# doc values
+DELETE test_doc_values
+
+PUT test_doc_values
+
+GET test_doc_values
+
+PUT test_doc_values/_mapping/doc
+{
+  "properties": {
+    "username": {
+      "type": "keyword",
+      "doc_values": true
+    },
+    "hobby": {
+      "type": "keyword"
+    }
+  }
+}
+
+PUT test_doc_values1/
+{
+  "mappings": {
+    "doc": {
+      "properties": {
+        "username": {
+          "type": "keyword",
+          "doc_values": false
+        }
+      }
+    }
+  }
+}
+
+
+
+PUT test_doc_values/doc/1
+{
+  "username":"alfred",
+  "hobby":"basketball"
+}
+
+GET test_doc_values/_search
+{
+  "sort":"username"
+}
+
+GET test_doc_values/_search
+{
+  "sort":"hobby"
+}
+
+
+# can be used to get original field value for not stored field
+PUT test_search_index/_mapping/doc
+{
+  "properties": {
+    "username":{
+      "type":"text",
+      "fielddata": true
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "docvalue_fields": [
+    "username",
+    "username.keyword",
+    "age"
+  ]
+}
+
+PUT test_search_index/_mapping/doc
+{
+  "properties": {
+    "username":{
+      "type":"text",
+      "fielddata": true
+    }
+  }
+}
+
+
+# pagination
+GET test_search_index/_search
+{
+  "from":4,
+  "size":2
+}
+
+#total_page=(total+page_size-1)/page_size
+
+GET test_search_index/_search
+{
+  "from":9998,
+  "size":2
+}
+
+
+# scroll
+GET test_search_index/_search?scroll=5m
+{
+  "size":1
+}
+
+
+GET _search/scroll
+GET test_search_index/_search
+
+# new doc can not be searched
+PUT test_search_index/doc/10
+{
+  "username":"doc10"
+}
+
+
+DELETE test_search_index/doc/10
+
+POST _search/scroll
+{
+  "scroll" : "5m", 
+  "scroll_id": "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFm1FalhyMWpTVHFDc1hWUGpPTTVJNmcAAAAAAAGSixZrY0xvbGlDR1NUbXZtbFF0Y0p0bXp3"
+}
+
+DELETE _search/scroll/_all
+# search_after
+GET test_search_index/_search
+{
+  "size":1,
+  "sort":{
+    "age":"desc",
+    "_id":"desc"
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size":1,
+  "search_after":[23,"4"],
+  "sort":{
+    "age":"desc",
+    "_id":"desc"
+  }
+}

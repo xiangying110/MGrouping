@@ -1,0 +1,961 @@
+# aggregation
+POST test_search_index/_bulk
+{"index":{"_id":"1"}}
+{"username":"alfred way","job":"java engineer","age":18,"birth":"1990-01-02","isMarried":false,"salary":10000}
+{"index":{"_id":"2"}}
+{"username":"tom","job":"java senior engineer","age":28,"birth":"1980-05-07","isMarried":true,"salary":30000}
+{"index":{"_id":"3"}}
+{"username":"lee","job":"ruby engineer","age":22,"birth":"1985-08-07","isMarried":false,"salary":15000}
+{"index":{"_id":"4"}}
+{"username":"Nick","job":"web engineer","age":23,"birth":"1989-08-07","isMarried":false,"salary":8000}
+{"index":{"_id":"5"}}
+{"username":"Niko","job":"web engineer","age":18,"birth":"1994-08-07","isMarried":false,"salary":5000}
+{"index":{"_id":"6"}}
+{"username":"Michell","job":"ruby engineer","age":26,"birth":"1987-08-07","isMarried":false,"salary":12000}
+
+GET test_search_index/_search
+
+GET _cat/indices
+
+
+
+GET test_search_index/_search
+{
+  "size":1,
+  "from":2,
+  
+  "aggs": {
+    "people_per_job": {
+      "terms": {
+        "field": "job.keyword"
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs": {
+    "people_per_job": {
+      "terms": {
+        "field": "job.keyword"
+      }
+    },
+    "avg_salary":{
+      "avg": {
+        "field": "salary"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "min_age":{
+      "min": {
+        "field": "age"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "max_age":{
+      "max": {
+        "field": "age"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "avg_age":{
+      "avg": {
+        "field": "age"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "sum_age":{
+      "sum": {
+        "field": "age"
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "min_age": {
+      "min": {
+        "field": "age"
+      }
+    },
+    "max_age": {
+      "max": {
+        "field": "age"
+      }
+    },
+    "avg_age": {
+      "avg": {
+        "field": "age"
+      }
+    },
+    "sum_age": {
+      "sum": {
+        "field": "age"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "count_of_job":{
+      "cardinality": {
+        "field": "job.keyword"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "stats_age":{
+      "stats": {
+        "field": "age"
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "exstats_salary":{
+      "extended_stats": {
+        "field": "salary"
+      }
+    }
+  }
+}
+
+
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "per_salary":{
+      "percentiles": {
+        "field": "salary"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "per_age": {
+      "percentiles": {
+        "field": "salary",
+        "percents": [
+          95,
+          99,
+          99.9
+        ]
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "per_salary": {
+      "percentile_ranks": {
+        "field": "salary",
+        "values": [
+          11000,
+          30000
+        ]
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "top_employee": {
+          "top_hits": {
+            "size": 10,
+            "sort": [
+              {
+                "age": {
+                  "order": "desc"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
+# bucket
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 5
+      }
+    }
+  }
+}
+
+
+
+
+
+
+GET test_search_index
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "salary_range": {
+      "range": {
+        "field": "salary",
+        "ranges": [
+          {
+            "key":"<10000",
+            "to": 10000
+          },
+          {
+            "from": 10000,
+            "to": 20000
+          },
+          {
+            "key":">20000",
+            "from": 20000
+          }
+        ]
+      }
+    }
+  }
+}
+
+
+
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "date_range": {
+      "range": {
+        "field": "birth",
+        "format": "yyyy",
+        "ranges": [
+          {
+            "from":"1980",
+            "to": "1990"
+          },
+          {
+            "from": "1990",
+            "to": "2000"
+          },
+          {
+            "from": "2000"
+          }
+        ]
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "date_range": {
+      "range": {
+        "field": "birth",
+        "format":"yyyy",
+        "ranges": [
+          {
+            "to": "now-30y/y"
+          },
+          {
+            "from": "now-30y/y",
+            "to": "now-20y/y"
+          },
+          {
+            "from": "now-20y/y"
+          }
+        ]
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "salary_hist":{
+      "histogram": {
+        "field": "salary",
+        "interval": 5000,
+        "extended_bounds": {
+          "min": 0,
+          "max": 40000
+        }
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "by_year":{
+      "date_histogram": {
+        "field": "birth",
+        "interval": "year",
+        "format":"yyyy"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "salary_hist":{
+      "histogram": {
+        "field": "salary",
+        "interval": 5000,
+        "extended_bounds": {
+          "min": 0,
+          "max": 40000
+        }
+      }
+    }
+  }
+}
+
+
+
+
+# bucket more 子分桶，分桶后在分桶
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "age_range": {
+          "range": {
+            "field": "age",
+            "ranges": [
+              {
+                "to": 20
+              },
+              {
+                "from": 20,
+                "to": 30
+              },
+              {
+                "from": 30
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "salary": {
+          "stats": {
+            "field": "salary"
+          }
+        }
+      }
+    }
+  }
+}
+
+# pipeline aggs
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "jobs":{
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs":{
+        "avg_salary":{
+          "avg": {
+            "field": "salary"
+          }
+        }
+      }
+    },
+    "min_salary_by_job":{
+      "min_bucket": {
+        "buckets_path": "jobs>avg_salary"
+      }
+    }
+  }
+} 
+
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "jobs":{
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs":{
+        "avg_salary":{
+          "avg": {
+            "field": "salary"
+          }
+        }
+      }
+    },
+    "max_salary_by_job":{
+      "max_bucket": {
+        "buckets_path": "jobs>avg_salary"
+      }
+    }
+  }
+} 
+
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "jobs":{
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs":{
+        "avg_salary":{
+          "avg": {
+            "field": "salary"
+          }
+        }
+      }
+    },
+    "avg_salary_by_job":{
+      "avg_bucket": {
+        "buckets_path": "jobs>avg_salary"
+      }
+    }
+  }
+} 
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "jobs":{
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs":{
+        "avg_salary":{
+          "avg": {
+            "field": "salary"
+          }
+        }
+      }
+    },
+    "sum_salary_by_job":{
+      "sum_bucket": {
+        "buckets_path": "jobs>avg_salary"
+      }
+    }
+  }
+} 
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "jobs":{
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs":{
+        "avg_salary":{
+          "avg": {
+            "field": "salary"
+          }
+        }
+      }
+    },
+    "stats_salary_by_job":{
+      "stats_bucket": {
+        "buckets_path": "jobs>avg_salary"
+      }
+    }
+  }
+} 
+
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "jobs":{
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      },
+      "aggs":{
+        "avg_salary":{
+          "avg": {
+            "field": "salary"
+          }
+        }
+      }
+    },
+    "percentiles_salary_by_job":{
+      "percentiles_bucket": {
+        "buckets_path": "jobs>avg_salary"
+      }
+    }
+  }
+} 
+
+#derivative
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "birth": {
+      "date_histogram": {
+        "field": "birth",
+        "interval": "year",
+        "min_doc_count": 0
+      },
+      "aggs": {
+        "avg_salary": {
+          "avg": {
+            "field": "salary"
+          }
+        },
+        "derivative_avg_salary": {
+          "derivative": {
+            "buckets_path": "avg_salary"
+          }
+        }
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "birth": {
+      "date_histogram": {
+        "field": "birth",
+        "interval": "year",
+        "min_doc_count": 0
+      },
+      "aggs": {
+        "avg_salary": {
+          "avg": {
+            "field": "salary"
+          }
+        },
+        "mavg_salary": {
+          "moving_avg": {
+            "buckets_path": "avg_salary"
+          }
+        }
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "birth": {
+      "date_histogram": {
+        "field": "birth",
+        "interval": "year",
+        "min_doc_count": 0
+      },
+      "aggs": {
+        "avg_salary": {
+          "avg": {
+            "field": "salary"
+          }
+        },
+        "cumulative_salary": {
+          "cumulative_sum": {
+            "buckets_path": "avg_salary"
+          }
+        }
+      }
+    }
+  }
+}
+
+# filter
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs_salary_small": {
+      "filter": {
+        "range": {
+          "salary": {
+            "to": 10000
+          }
+        }
+      },
+      "aggs": {
+        "jobs": {
+          "terms": {
+            "field": "job.keyword"
+          }
+        }
+      }
+    },
+    "jobs": {
+      "terms": {
+        "field": "job.keyword"
+      }
+    }
+  }
+}
+
+#post-filter
+GET test_search_index/_search
+{
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword"
+      }
+    }
+  },
+  "post_filter": {
+    "match":{
+      "job.keyword":"java engineer"
+    }
+  }
+}
+
+#global
+GET test_search_index/_search
+{
+  "query": {
+    "match": {
+      "job.keyword": "java engineer"
+    }
+  },
+  "aggs": {
+    "java_avg_salary": {
+      "avg": {
+        "field": "salary"
+      }
+    },
+    "all": {
+      "global": {},
+      "aggs": {
+        "avg_salary": {
+          "avg": {
+            "field": "salary"
+          }
+        }
+      }
+    }
+  }
+}
+
+#sort
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 10,
+        "order": [
+          {
+            "avg_salary": "desc"
+          }
+        ]
+      },
+      "aggs": {
+        "avg_salary": {
+          "avg": {
+            "field": "salary"
+          }
+        }
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 10,
+        "order": [
+          {
+            "stats_salary.sum": "desc"
+          }
+        ]
+      },
+      "aggs": {
+        "stats_salary": {
+          "stats": {
+            "field": "salary"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "salary_hist": {
+      "histogram": {
+        "field": "salary",
+        "interval": 5000,
+        "order": {
+          "age>avg_age": "desc"
+        }
+      },
+      "aggs": {
+        "age": {
+          "filter": {
+            "range": {
+              "age": {
+                "gte": 10
+              }
+            }
+          },
+          "aggs": {
+            "avg_age": {
+              "avg": {
+                "field": "age"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# shard_size
+GET test_search_index/_search
+{
+  "size": 0,
+  "aggs": {
+    "jobs": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 2,
+        "shard_size": 10,
+        "show_term_doc_count_error": true
+      }
+    }
+  }
+}
+
+GET test_search_index
+
+GET test_order/_search
+
+GET test_order
+
+GET test_order/_search
+{
+  "size":0,
+  "aggs":{
+    "customer_count":{
+      "cardinality": {
+        "field": "CustomerID.keyword"
+      }
+    }
+  }
+}
+
+GET test_order_one_shard/_search
+{
+  "size":0,
+  "aggs":{
+    "customer_count":{
+      "cardinality": {
+        "field": "CustomerID.keyword"
+      }
+    }
+  }
+}
+
+GET test_order_one_shard/_search
+{
+  "size":0,
+  "aggs":{
+    "states":{
+      "terms":{
+        "field":"CustomerID.keyword",
+        "size":1,
+        "show_term_doc_count_error": true
+      }
+    }
+  }
+}
+
+GET test_order_one_shard
+
+GET test_order/_search
+{
+  "size":0,
+  "aggs":{
+    "states":{
+      "terms":{
+        "field":"CustomerID.keyword",
+        "size":1,
+        "shard_size": 10000, 
+        "show_term_doc_count_error": true
+      }
+    }
+  }
+}
+
+# scope
+GET test_search_index/_search
+{
+  "size":0,
+  "aggs":{
+    "jobs":{
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "size":0,
+  "query":{
+    "match": {
+      "username": "alfred"
+    }
+  },
+  "aggs":{
+    "jobs":{
+      "terms": {
+        "field": "job.keyword",
+        "size": 10
+      }
+    }
+  }
+}

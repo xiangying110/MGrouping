@@ -1,0 +1,593 @@
+
+# query
+
+# data
+DELETE test_search_index
+
+PUT test_search_index
+{
+  "settings": {
+    "index":{
+        "number_of_shards": "1"
+    }
+  }
+}
+
+POST test_search_index/_doc/_bulk
+{"index":{"_id":"1"}}
+{"username":"alfred way","job":"java engineer","age":18,"birth":"1990-01-02","isMarried":false}
+{"index":{"_id":"2"}}
+{"username":"alfred","job":"java senior engineer and java specialist","age":28,"birth":"1980-05-07","isMarried":true}
+{"index":{"_id":"3"}}
+{"username":"lee","job":"java and ruby engineer","age":22,"birth":"1985-08-07","isMarried":false}
+{"index":{"_id":"4"}}
+{"username":"alfred junior way","job":"ruby engineer","age":23,"birth":"1989-08-07","isMarried":false}
+
+GET test_search_index
+
+# search api
+#泛查询，查询所有字段中包含alfred
+GET test_search_index/_search?q=alfred
+#这是个调优手段，可以看到实际执行的方式，通过description
+GET test_search_index/_search?q=alfred
+{
+  "profile":true
+}
+
+
+GET test_search_index/_search?q=username:alfred
+
+GET test_search_index/_search?q=username:alfred way
+{
+  "profile":true
+}
+
+GET test_search_index/_search?q=username:"alfred way"
+{
+  "profile":true
+}
+#
+GET test_search_index/_search?q=username:(alfred way)
+{
+  "profile":true
+}
+
+
+GET test_search_index/_search?q=username:alfred AND way
+{
+  "profile":true
+}
+
+GET test_search_index/_search?q=username:(alfred AND way)
+{
+  "profile":true
+}
+
+GET test_search_index/_search?q=username:(alfred NOT way)
+
+GET test_search_index/_search?q=username:(alfred +way)
+{
+  "profile":true
+}
+
+GET test_search_index/_search?q=username:(alfred %2Bway)
+{
+  "profile":true
+}
+#username包含alfred或者age大于26
+GET test_search_index/_search?q=username:alfred age:>26
+#username包含alfred并且age大于26
+GET test_search_index/_search?q=username:alfred AND age:>20
+
+GET test_search_index/_search?q=birth:(>1980 AND <1990)
+
+
+#以alf开头的所有文档
+GET test_search_index/_search?q=username:alf*
+
+GET test_search_index/_search?q=username:/[a]?l.*/
+
+GET test_search_index/_search?q=username:alfed
+#模糊查询，1个字符的差距
+GET test_search_index/_search?q=username:alfed~1
+
+GET test_search_index/_search?q=username:alfd~2
+
+GET test_search_index/_search?q=job:"java engineer"
+#近似度，允许在这之间多1个词
+GET test_search_index/_search?q=job:"java engineer"~1
+
+
+GET test_search_index/_search?q=job:"java engineer"~2
+
+
+
+
+
+
+# match query
+GET test_search_index/_search
+
+
+
+# match query
+#含义是查询username包含alfred或way
+#explain是查看相关性算分的过程
+GET test_search_index/_search
+{
+  "explain":true,
+  "profile": true, 
+  "query": {
+    "match": {
+      "username": "alfred way"
+    }
+  }
+}
+#operator
+GET test_search_index/_search
+{
+  "query": {
+    "match": {
+      "username": {
+        "query": "alfred way",
+        "operator": "and"
+      }
+    }
+  }
+}
+#minimum_should_match至少包含查询语句的数
+GET test_search_index/_search
+{
+  "query": {
+    "match": {
+      "job": {
+        "query": "java ruby engineer",
+        "minimum_should_match": "3"
+      }
+    }
+  }
+}
+
+
+# match phrase query
+GET test_search_index/_search
+{
+  "query": {
+    "match_phrase": {
+      "job": "java engineer"
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "query": {
+    "match_phrase": {
+      "job": "engineer java"
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query": {
+    "match_phrase": {
+      "job": {
+        "query": "java engineer",
+        "slop": "2"
+      }
+    }
+  }
+}
+
+
+
+# query string 
+GET test_search_index/_search
+{
+  "profile":true,
+  "query":{
+    "query_string": {
+      "default_field": "username",
+      "query": "alfred AND way"
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "profile":true,
+  "query": {
+    "query_string": {
+      "fields": [
+        "username",
+        "job"
+      ],
+      "query": "alfred OR (java AND ruby)"
+    }
+  }
+}
+
+
+# simple query string
+GET test_search_index/_search
+{
+  "profile":true,
+  "query":{
+    "simple_query_string": {
+     "query": "alfred +way \"java",
+     "fields": ["username"]
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query":{
+    "query_string": {
+      "default_field": "username",
+      "query": "alfred +way \"java"
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query":{
+    "simple_query_string": {
+     "query": "(job:alfred | username:alfred) (+(job:java | username:java) +(job:ruby | username:ruby)"
+    }
+  }
+}
+
+
+# term query
+GET test_search_index/_search
+{
+  "query":{
+    "term":{
+      "username":"alfred"
+    }
+  }
+}
+#不返回任何，把alfred way当成一个词
+GET test_search_index/_search
+{
+  "query":{
+    "term":{
+      "username":"alfred way"
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query": {
+    "terms": {
+      "username": [
+        "alfred",
+        "way"
+      ]
+    }
+  }
+}
+
+# range query
+GET test_search_index/_search
+{
+  "query":{
+    "range": {
+      "age": {
+        "gte": 10,
+        "lte": 30
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "query":{
+    "range": {
+      "birth": {
+        "gte": "1980-01-01"
+      }
+    }
+  }
+}
+
+
+GET test_search_index/_search
+{
+  "query":{
+    "range": {
+      "birth": {
+        "gte": "now-30y"
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query":{
+    "range": {
+      "birth": {
+        "gte": "2010||-20y"
+      }
+    }
+  }
+}
+
+# constant score
+GET test_search_index/_search
+{
+  "query":{
+    "constant_score": {
+      "filter": {
+        "match":{
+          "username":"alfred"
+        }
+      }
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "constant_score": {
+            "filter": {
+              "match": {
+                "job": "java"
+              }
+            }
+          }
+        },
+        {
+          "constant_score": {
+            "filter": {
+              "match": {
+                "job": "ruby"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+# bool query
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {}
+      ],
+      "must_not": [
+        {}
+      ],
+      "should": [
+        {}
+      ],
+      "filter": [
+        {}
+      ]
+    }
+  }
+} 
+
+
+#filter query
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "username": "alfred"
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "username": "alfred"
+          }
+        },
+        {
+          "match": {
+            "job": "specialist"
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "job": "java"
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "match": {
+            "job": "ruby"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "username": "junior"
+          }
+        },
+        {
+          "match": {
+            "job": "ruby"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+GET test_search_index
+#minimum_should_match至少满足两个匹配
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {"term": {"job": "java"}},
+        {"term": {"job": "ruby"}},
+        {"term": {"job": "specialist"}}
+      ],
+      "minimum_should_match": 2
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "username": "alfred"
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET my_index/_search
+
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "username": "alfred"
+          }
+        }
+      ],
+      "should": [
+        {
+          "term": {
+            "job": "ruby"
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "username": "alfred way"
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET test_search_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "username": "alfred way"
+          }
+        }
+      ],
+      "should": [
+        {
+          "term": {
+            "job": "ruby"
+          }
+        }
+      ]
+    }
+  }
+}
+
+# count
+GET test_search_index/_count
+{
+  "query":{
+    "match":{
+      "username": "alfred"
+    }
+  }
+}
+
+
+# source filtering
+GET test_search_index/_search
+
+GET test_search_index/_search?_source=username
+
+GET test_search_index/_search
+{
+  "_source": false
+}
+
+GET test_search_index/_search
+{
+  "_source": ["username","age"]
+}
+
+GET test_search_index/_search
+{
+  "_source": {
+    "includes": "*i*",
+    "excludes": "birth"
+  }
+}
